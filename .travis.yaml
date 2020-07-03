@@ -1,0 +1,23 @@
+sudo: required
+
+services:
+  - docker
+
+before-install:
+  - docker build -t devil39/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run devil39/react-test npm test -- --coverage
+
+after-success:
+  - docker build -t devil39/multi-client ./client
+  - docker build -t devil39/multi-nginx ./nginx
+  - docker build -t devil39/multi-server ./server
+  - docker build -t devil39/multi-worker ./worker
+  #Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push devil39/multi-client
+  - docker push devil39/multi-nginx
+  - docker push devil39/multi-server
+  - docker push devil39/multi-worker
